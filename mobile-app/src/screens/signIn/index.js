@@ -1,11 +1,12 @@
 import * as React from 'react';
-import { Alert, Image, Button, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, AsyncStorage, Image, Button, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Icon } from 'react-native-elements'
 import { ScrollView, State } from 'react-native-gesture-handler';
 import * as WebBrowser from 'expo-web-browser';
 import { MonoText } from '../../../components/StyledText';
 import { styles } from './styles'
-import { api } from '../../services/api'
+import api from '../../services/api'
+
 export default class HomeScreen extends React.Component {
   render(){
     return (
@@ -48,15 +49,22 @@ export default class HomeScreen extends React.Component {
     this.setState({ password });
   };
   
-  handleCreateAccountPress = () => {
-    this.props.navigation.navigate('SignUp');
-  };
-
   hangleSignInPress = async () => {
-    const response = await api.post('/sessions', {
-      email: this.state.email,
-      password: this.state.password,
-    });
+    try{
+      const response = await api.post('/api/token/', {
+        username: this.state.login,
+        password: this.state.password,
+      });
+      await AsyncStorage.setItem('token', response.data.access);
+      Alert.alert('Logged with success');
+    }
+    catch(error){
+      if (error.response.status === 401){
+        Alert.alert('Login or password is incorrect'); 
+      } 
+      else {
+        console.debug(error.response)
+      }
+    }
   }
 }
-
